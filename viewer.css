@@ -1,27 +1,77 @@
 /* Theme and base controls for the paper diagram viewer. */
 :root {
+  color-scheme: light;
   --bg: #fbfbfa; --panel: #ffffff; --ink: #1b1d21; --muted: #61656e;
   --line: #e6e6ea; --accent: #3a5bd9; --accent-soft: #eef1fd; --danger: #b23b3b;
   --grid: #e9e9ee; --axis: #9aa0ab;
+  --on-accent: #ffffff;
+  --kind-theorem: #3a5bd9; --kind-proposition: #1d9a9a; --kind-lemma: #2f9e57;
+  --kind-corollary: #7c5cff; --kind-definition: #d98324; --kind-remark: #61656e;
+  --border: var(--line);
+  accent-color: var(--accent);
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
+    color-scheme: dark;
     --bg: #131519; --panel: #1a1d23; --ink: #e9eaec; --muted: #9aa0ab;
     --line: #2a2e36; --accent: #8aa2ff; --accent-soft: #20263a; --danger: #f08a8a;
     --grid: #262a33; --axis: #565c68;
+    --on-accent: #131519;
+    --kind-theorem: #8aa2ff; --kind-proposition: #64c9c9; --kind-lemma: #75cc93;
+    --kind-corollary: #b39bff; --kind-definition: #e6ad70; --kind-remark: #9aa0ab;
   }
 }
 :root[data-theme="light"] {
+  color-scheme: light;
   --bg: #fbfbfa; --panel: #ffffff; --ink: #1b1d21; --muted: #61656e;
   --line: #e6e6ea; --accent: #3a5bd9; --accent-soft: #eef1fd; --danger: #b23b3b;
   --grid: #e9e9ee; --axis: #9aa0ab;
 }
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #131519; --panel: #1a1d23; --ink: #e9eaec; --muted: #9aa0ab;
   --line: #2a2e36; --accent: #8aa2ff; --accent-soft: #20263a; --danger: #f08a8a;
   --grid: #262a33; --axis: #565c68;
+  --on-accent: #131519;
+  --kind-theorem: #8aa2ff; --kind-proposition: #64c9c9; --kind-lemma: #75cc93;
+  --kind-corollary: #b39bff; --kind-definition: #e6ad70; --kind-remark: #9aa0ab;
+}
+
+/* Palette references: https://github.com/sainnhe/gruvbox-material,
+   https://spec.draculatheme.com/, https://www.nordtheme.com/docs/colors-and-palettes */
+:root[data-theme="gruvbox-material-dark"] {
+  color-scheme: dark;
+  --bg: #282828; --panel: #32302f; --ink: #d4be98; --muted: #bdae93;
+  --line: #504945; --accent: #d8a657; --accent-soft: #4f422e; --danger: #ea6962;
+  --grid: #3c3836; --axis: #928374; --on-accent: #282828;
+  --kind-theorem: #7daea3; --kind-proposition: #89b482; --kind-lemma: #a9b665;
+  --kind-corollary: #d3869b; --kind-definition: #e78a4e; --kind-remark: #bdae93;
+}
+:root[data-theme="gruvbox-material-light"] {
+  color-scheme: light;
+  --bg: #fbf1c7; --panel: #f4e8be; --ink: #654735; --muted: #7c6f64;
+  --line: #ddccab; --accent: #45707a; --accent-soft: #dadec0; --danger: #c14a4a;
+  --grid: #eee0b7; --axis: #a89984; --on-accent: #fbf1c7;
+  --kind-theorem: #45707a; --kind-proposition: #4c7a5d; --kind-lemma: #6c782e;
+  --kind-corollary: #945e80; --kind-definition: #c35e0a; --kind-remark: #7c6f64;
+}
+:root[data-theme="dracula"] {
+  color-scheme: dark;
+  --bg: #282a36; --panel: #21222c; --ink: #f8f8f2; --muted: #b5b9d3;
+  --line: #44475a; --accent: #bd93f9; --accent-soft: #343146; --danger: #ff5555;
+  --grid: #343746; --axis: #6272a4; --on-accent: #282a36;
+  --kind-theorem: #bd93f9; --kind-proposition: #8be9fd; --kind-lemma: #50fa7b;
+  --kind-corollary: #ff79c6; --kind-definition: #ffb86c; --kind-remark: #b5b9d3;
+}
+:root[data-theme="nord"] {
+  color-scheme: dark;
+  --bg: #2e3440; --panel: #3b4252; --ink: #eceff4; --muted: #d8dee9;
+  --line: #4c566a; --accent: #88c0d0; --accent-soft: #434c5e; --danger: #bf616a;
+  --grid: #434c5e; --axis: #81a1c1; --on-accent: #2e3440;
+  --kind-theorem: #81a1c1; --kind-proposition: #8fbcbb; --kind-lemma: #a3be8c;
+  --kind-corollary: #b48ead; --kind-definition: #ebcb8b; --kind-remark: #d8dee9;
 }
 
 * { box-sizing: border-box; }
@@ -50,7 +100,7 @@ select:focus-visible, input:focus-visible {
 .hint { color: var(--muted); font-size: .85rem; margin: .3rem 0 0; }
 
 /* buttons */
-button { font: inherit; font-weight: 600; color: #fff; background: var(--accent);
+button { font: inherit; font-weight: 600; color: var(--on-accent); background: var(--accent);
   border: 0; border-radius: 7px; padding: .5rem 1.05rem; cursor: pointer; }
 button:hover { filter: brightness(1.06); }
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

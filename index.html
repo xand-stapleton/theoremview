@@ -5,6 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://teorth.github.io; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Theoremview — Paper Diagram Viewer</title>
+<script src="themes.js"></script>
 <link rel="stylesheet" href="viewer.css">
 <style>
   .page { max-width: 1120px; margin: 0 auto; padding: 1.2rem 1rem 3rem; }
@@ -54,6 +55,8 @@
   .bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: 1rem 0 .6rem;
     padding: .5rem .7rem; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
   .bar .grp { display: flex; align-items: center; gap: .4rem; }
+  .bar .themegrp { flex-wrap: wrap; }
+  .bar #theme { min-width: 0; width: 13rem; max-width: 100%; }
   .bar label { font-size: .82rem; color: var(--muted); }
   .bar select, .bar button { font: inherit; font-size: .85rem; padding: .18rem .5rem; border: 1px solid var(--line);
     border-radius: 6px; background: var(--bg); color: var(--ink); cursor: pointer; }
@@ -86,8 +89,11 @@
   #dg .node { cursor: pointer; }
   #dg .node rect { fill: var(--bg); }
   #dg .node.external rect { fill: var(--panel); }
+  /* Tint authored node colours to suit the scheme without changing diagram data. */
+  #dg .node.filled rect { fill: var(--bg); fill: color-mix(in srgb, var(--node-color) 20%, var(--bg)); }
   #dg .node .lbl { font: 600 12px var(--mono, monospace); fill: var(--ink); pointer-events: none; }
   #dg .node .nm  { font: 400 9.5px system-ui, sans-serif; fill: var(--muted); pointer-events: none; }
+  #dg .node.filled .nm { fill: var(--ink); }
   #dg .node.sel rect { filter: drop-shadow(0 0 4px var(--accent)); }   /* glow, so the weight-based border thickness stays readable */
   #dg .edge { fill: none; }
   #dg .edge.uses { stroke: var(--axis, #9aa); stroke-width: 1.3; opacity: .8; }
@@ -131,15 +137,15 @@
   .panel .pbtn { font: inherit; font-size: 12px; padding: .2rem .6rem; border: 1px solid var(--border, #ccc); border-radius: 5px;
     background: var(--panel, #f2f2f2); color: var(--ink); cursor: pointer; }
   .panel .pbtn:hover { border-color: var(--accent); color: var(--accent); }
-  .panel .pbtn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .panel .pbtn.primary:hover { filter: brightness(1.08); color: #fff; }
+  .panel .pbtn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .panel .pbtn.primary:hover { filter: brightness(1.08); color: var(--on-accent); }
   .panel .pbtn.danger:hover { border-color: var(--danger); color: var(--danger); }
 
   /* edit form */
   .panel .ehead { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; }
   .panel .etabs { display: inline-flex; border: 1px solid var(--border, #ccc); border-radius: 6px; overflow: hidden; }
   .panel .etab { font: inherit; font-size: 12px; padding: .12rem .55rem; border: 0; background: var(--bg); color: var(--muted); cursor: pointer; }
-  .panel .etab.on { background: var(--accent); color: #fff; }
+  .panel .etab.on { background: var(--accent); color: var(--on-accent); }
   .panel .efield { display: flex; flex-direction: column; gap: .15rem; margin: .45rem 0; }
   .panel .efield > label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
   .panel .efield .hintlbl { text-transform: none; letter-spacing: 0; font-style: italic; }
@@ -190,8 +196,8 @@
   .exbox .eerr { margin: .35rem .8rem 0; color: var(--danger); font-size: 12px; white-space: pre-wrap; }
   .exhead .exact button { font: inherit; font-size: 12px; padding: .2rem .55rem; border: 1px solid var(--border, #ccc); border-radius: 5px; background: var(--panel, #f2f2f2); color: var(--ink); cursor: pointer; }
   .exhead .exact button:hover { border-color: var(--accent); color: var(--accent); }
-  .exhead .exact button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .exhead .exact button.primary:hover { filter: brightness(1.08); color: #fff; }
+  .exhead .exact button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .exhead .exact button.primary:hover { filter: brightness(1.08); color: var(--on-accent); }
   .extext[readonly] { opacity: .96; }
   .extext { flex: 1; min-height: 240px; margin: .5rem .8rem .8rem; padding: .5rem .6rem; resize: vertical;
     font-family: "SFMono-Regular", Consolas, var(--mono, monospace); font-size: 12px; line-height: 1.4;
@@ -258,6 +264,17 @@
     <div class="grp" id="keepWrap" hidden><label><input type="checkbox" id="keep" checked> keep depth</label></div>
     <div class="grp"><label>direction</label>
       <select id="dir"><option value="up">results at top</option><option value="down">results at bottom</option></select>
+    </div>
+    <div class="grp themegrp"><label for="theme">colour scheme</label>
+      <select id="theme" title="Choose a colour scheme; saved in this browser">
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+        <option value="gruvbox-material-dark">Gruvbox Material — Dark</option>
+        <option value="gruvbox-material-light">Gruvbox Material — Light</option>
+        <option value="dracula">Dracula</option>
+        <option value="nord">Nord</option>
+      </select>
     </div>
     <div class="grp"><button id="fit" title="Fit the whole diagram in view">fit</button></div>
     <div class="grp"><button id="newStmt" title="Add a new statement to the diagram">+ statement</button>
@@ -506,7 +523,7 @@
   function svgEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
   function toSvg(diagram, pos, opts) {
     opts = Object.assign({ pad: 26 }, opts);
-    const C = { bg: '#ffffff', ink: '#1b1f24', muted: '#8a8f98', uses: '#8a9099', gen: '#3a5bd9' };
+    const C = Object.assign({ bg: '#ffffff', ink: '#1b1f24', muted: '#8a8f98', uses: '#8a9099', gen: '#3a5bd9' }, opts.colors);
     const P = [...pos.values()];
     if (!P.length) return '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>\n';
     const minX = Math.min(...P.map((p) => p.x - p.w / 2)) - opts.pad;
@@ -530,16 +547,17 @@
     const nodes = diagram.nodes.map((n) => {
       const p = pos.get(n.id); if (!p) return '';
       const x = (p.x - p.w / 2).toFixed(1), y = (p.y - p.h / 2).toFixed(1);
-      const hue = KIND_HEX[n.kind] ? '#' + KIND_HEX[n.kind] : C.muted;
-      const fill = safeFill(n.color) || C.bg;
+      const style = (opts.nodeStyles && opts.nodeStyles.get(n.id)) || {};
+      const hue = style.stroke || (KIND_HEX[n.kind] ? '#' + KIND_HEX[n.kind] : C.muted);
+      const fill = style.fill || safeFill(n.color) || C.bg;
       const sw = (0.6 + (n.weight == null ? 2 : n.weight) * 0.8).toFixed(2);
       const dash = n.external ? ' stroke-dasharray="5 3"' : '';
       const nm = n.name
-        ? `<text x="${p.x.toFixed(1)}" y="${(p.y + 12).toFixed(1)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9.5" fill="${C.muted}">${svgEsc(n.name.length > Math.floor(p.w / 5.4) ? n.name.slice(0, Math.floor(p.w / 5.4) - 1) + '…' : n.name)}</text>`
+        ? `<text x="${p.x.toFixed(1)}" y="${(p.y + 12).toFixed(1)}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9.5" fill="${style.muted || C.muted}">${svgEsc(n.name.length > Math.floor(p.w / 5.4) ? n.name.slice(0, Math.floor(p.w / 5.4) - 1) + '…' : n.name)}</text>`
         : '';
       return '<g>'
         + `<rect x="${x}" y="${y}" width="${p.w}" height="${p.h}" rx="6" fill="${fill}" stroke="${hue}" stroke-width="${sw}"${dash}/>`
-        + `<text x="${p.x.toFixed(1)}" y="${(p.y - 2).toFixed(1)}" text-anchor="middle" font-family="ui-monospace, monospace" font-weight="600" font-size="12" fill="${C.ink}">${svgEsc(((L) => L.length > Math.floor(p.w / 7.5) ? L.slice(0, Math.floor(p.w / 7.5) - 1) + '…' : L)(String(n.label || n.id)))}</text>`
+        + `<text x="${p.x.toFixed(1)}" y="${(p.y - 2).toFixed(1)}" text-anchor="middle" font-family="ui-monospace, monospace" font-weight="600" font-size="12" fill="${style.ink || C.ink}">${svgEsc(((L) => L.length > Math.floor(p.w / 7.5) ? L.slice(0, Math.floor(p.w / 7.5) - 1) + '…' : L)(String(n.label || n.id)))}</text>`
         + nm + '</g>';
     }).join('');
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(0)} ${minY.toFixed(0)} ${w.toFixed(0)} ${h.toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}">`
@@ -616,12 +634,12 @@ const PD = window.PaperDiagram;
 const PDX = window.PaperDiagramExport;
 
 const KIND = {
-  theorem:     { hue: '#3a5bd9', label: 'theorem' },
-  proposition: { hue: '#1d9a9a', label: 'proposition' },
-  lemma:       { hue: '#2f9e57', label: 'lemma' },
-  corollary:   { hue: '#7c5cff', label: 'corollary' },
-  definition:  { hue: '#d98324', label: 'definition' },
-  remark:      { hue: '#8a8f98', label: 'remark' },
+  theorem:     { hue: 'var(--kind-theorem)', label: 'theorem' },
+  proposition: { hue: 'var(--kind-proposition)', label: 'proposition' },
+  lemma:       { hue: 'var(--kind-lemma)', label: 'lemma' },
+  corollary:   { hue: 'var(--kind-corollary)', label: 'corollary' },
+  definition:  { hue: 'var(--kind-definition)', label: 'definition' },
+  remark:      { hue: 'var(--kind-remark)', label: 'remark' },
 };
 const kindOf = (n) => KIND[n.kind] || { hue: 'var(--muted)', label: n.kind };
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
@@ -705,17 +723,14 @@ function nodeSvg(n, p) {
   const lbl = truncate(n.label || n.id, Math.floor(p.w / 7.5));
   const nm = truncate(n.name || '', Math.floor(p.w / 5.4));
   const tip = (n.label || n.id) + (n.name ? ' — ' + n.name : '');
-  // an explicit fill overrides the stylesheet (inline style wins) and forces dark
-  // ink on the text so a light fill stays legible in either theme
+  // CSS blends the authored colour with the current scheme's background.
   const fill = safeFill(n.color);
-  const rectSty = fill ? ` style="fill:${fill}"` : '';
-  const lblSty = fill ? ' style="fill:#1b1f24"' : '';
-  const nmSty = fill ? ' style="fill:#4a5160"' : '';
+  const rectSty = fill ? ` style="--node-color:${fill}"` : '';
   return `<g class="node ${n.external ? 'external' : ''}${fill ? ' filled' : ''}" data-id="${esc(n.id)}">`
     + `<title>${esc(tip)}</title>`
     + `<rect x="${x}" y="${y}" width="${p.w}" height="${p.h}" rx="6" stroke="${k.hue}" stroke-width="${sw}"${dash}${rectSty}></rect>`
-    + `<text class="lbl" x="${p.x.toFixed(1)}" y="${(p.y - 2).toFixed(1)}" text-anchor="middle"${lblSty}>${esc(lbl)}</text>`
-    + (nm ? `<text class="nm" x="${p.x.toFixed(1)}" y="${(p.y + 12).toFixed(1)}" text-anchor="middle"${nmSty}>${esc(nm)}</text>` : '')
+    + `<text class="lbl" x="${p.x.toFixed(1)}" y="${(p.y - 2).toFixed(1)}" text-anchor="middle">${esc(lbl)}</text>`
+    + (nm ? `<text class="nm" x="${p.x.toFixed(1)}" y="${(p.y + 12).toFixed(1)}" text-anchor="middle">${esc(nm)}</text>` : '')
     + `</g>`;
 }
 
@@ -1307,6 +1322,24 @@ function showExport(o) {
   if (o.url) { open.href = o.url; open.hidden = false; } else { open.hidden = true; }
   $('exwrap').hidden = false;
 }
+// Resolve CSS colours so the standalone SVG keeps the currently displayed scheme.
+function svgThemeOptions() {
+  const css = getComputedStyle(document.documentElement);
+  const color = (name) => css.getPropertyValue(name).trim();
+  const nodeStyles = new Map([...$('dg').querySelectorAll('.node')].map((node) => {
+    const rect = getComputedStyle(node.querySelector('rect'));
+    const label = getComputedStyle(node.querySelector('.lbl'));
+    const name = node.querySelector('.nm');
+    return [node.getAttribute('data-id'), {
+      fill: rect.fill, stroke: rect.stroke, ink: label.fill,
+      muted: name ? getComputedStyle(name).fill : color('--muted'),
+    }];
+  }));
+  return { nodeStyles, colors: {
+    bg: color('--panel'), ink: color('--ink'), muted: color('--muted'),
+    uses: color('--axis'), gen: color('--accent'),
+  } };
+}
 function openExport(kind) {
   const base = (diagram.meta.id || 'paper-diagram');
   try {
@@ -1318,7 +1351,7 @@ function openExport(kind) {
     } else if (kind === 'svg') {
       showExport({ title: 'SVG — standalone image', file: base + '.svg', mime: 'image/svg+xml',
         note: 'The text below IS the image file. Use the download button to save it as ' + base + '.svg — once saved with the .svg extension it opens in any browser or vector editor. (Pasting the raw text into a browser address bar will not work.)',
-        text: PDX.toSvg(diagram, POS) });
+        text: PDX.toSvg(diagram, POS, svgThemeOptions()) });
     } else if (kind === 'quiver') {
       const url = PDX.toQuiverURL(diagram, POS);
       showExport({ title: 'quiver — import link', file: base + '-quiver-url.txt', url,
